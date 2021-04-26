@@ -4,6 +4,7 @@
 package tests
 
 import (
+	"io"
 	"io/ioutil"
 	"os"
 	"testing"
@@ -21,4 +22,14 @@ func TempDir(t *testing.T) string {
 	})
 
 	return dir
+}
+
+func CloseCloser(t *testing.T, c io.Closer) {
+	t.Helper()
+
+	if c == nil {
+		return
+	}
+
+	require.NoError(t, c.Close())
 }

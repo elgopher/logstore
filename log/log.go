@@ -4,47 +4,53 @@
 package log
 
 import (
-	"fmt"
-	"os"
-	"path"
+	"time"
 )
 
-func Open(dir string, options ...OpenOption) (*Log, error) {
-	l := &Log{}
-
-	for _, opt := range options {
-		if opt == nil {
-			continue
-		}
-
-		if err := opt(l); err != nil {
-			return nil, fmt.Errorf("error applying option: %w", err)
-		}
+func New(dir string) *Log {
+	return &Log{
+		dir: dir,
 	}
-
-	if err := mkdirIfMissing(dir); err != nil {
-		return nil, err
-	}
-
-	return l, nil
 }
-
-func mkdirIfMissing(dir string) error {
-	_, err := os.Stat(path.Join(dir))
-	if os.IsNotExist(err) {
-		if err := os.Mkdir(dir, 0775); err != nil {
-			return fmt.Errorf("cannot create directory: %w", err)
-		}
-	}
-
-	return nil
-}
-
-type OpenOption func(*Log) error
 
 type Log struct {
+	dir string
 }
 
-func (l *Log) Close() error {
-	return nil
+func (l *Log) OpenWriter(options ...OpenWriterOption) (Writer, error) {
+	return l.openWriter(options)
+}
+
+type OpenWriterOption func(*WriterSettings) error
+
+type WriterSettings struct {
+	now func() time.Time
+}
+
+func NowFunc(f func() time.Time) OpenWriterOption {
+	return func(s *WriterSettings) error {
+		s.now = f
+
+		return nil
+	}
+}
+
+type Writer interface {
+	Write(entry []byte, options ...WriteOption) (time.Time, error)
+	Close() error
+}
+
+type WriteOption func() error
+
+func (l *Log) OpenReader(options ...OpenReaderOption) (Reader, error) {
+	return l.openReader(options)
+}
+
+type OpenReaderOption func(*ReaderSettings) error
+
+type ReaderSettings struct{}
+
+type Reader interface {
+	Read() (time.Time, []byte, error)
+	Close() error
 }
