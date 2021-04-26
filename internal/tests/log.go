@@ -8,10 +8,13 @@ import (
 )
 
 func OpenLog(t *testing.T, options ...log.OpenOption) *log.Log {
+	t.Helper()
+
 	s, err := log.Open(TempDir(t), options...)
 	require.NoError(t, err)
 	t.Cleanup(func() {
 		_ = s.Close()
 	})
+
 	return s
 }

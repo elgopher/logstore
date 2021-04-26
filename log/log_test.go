@@ -4,7 +4,6 @@
 package log_test
 
 import (
-	"errors"
 	"path"
 	"testing"
 
@@ -39,7 +38,7 @@ func TestOpen(t *testing.T) {
 	t.Run("should return error for option returning error", func(t *testing.T) {
 		dir := tests.TempDir(t)
 		failingOption := func(l *log.Log) error {
-			return errors.New("error")
+			return stringError("error")
 		}
 		// when
 		l, err := log.Open(dir, failingOption)
@@ -61,5 +60,12 @@ func TestOpen(t *testing.T) {
 }
 
 func closeLog(t *testing.T, l *log.Log) {
+	t.Helper()
 	require.NoError(t, l.Close())
+}
+
+type stringError string
+
+func (s stringError) Error() string {
+	return string(s)
 }
