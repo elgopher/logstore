@@ -1,0 +1,13 @@
+linters:
+  enable:
+    - testpackage
+  disable:
+    - paralleltest
+    - gofumpt
+  presets:
+    - bugs
+    - complexity
+    - format
+    - performance
+    - style
+    - unused

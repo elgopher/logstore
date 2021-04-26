@@ -11,17 +11,21 @@ import (
 
 func Open(dir string, options ...OpenOption) (*Log, error) {
 	l := &Log{}
+
 	for _, opt := range options {
 		if opt == nil {
 			continue
 		}
+
 		if err := opt(l); err != nil {
 			return nil, fmt.Errorf("error applying option: %w", err)
 		}
 	}
+
 	if err := mkdirIfMissing(dir); err != nil {
 		return nil, err
 	}
+
 	return l, nil
 }
 
@@ -32,6 +36,7 @@ func mkdirIfMissing(dir string) error {
 			return fmt.Errorf("cannot create directory: %w", err)
 		}
 	}
+
 	return nil
 }
 

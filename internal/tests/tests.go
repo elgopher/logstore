@@ -12,10 +12,13 @@ import (
 )
 
 func TempDir(t *testing.T) string {
+	t.Helper()
+
 	dir, err := ioutil.TempDir("", "logstore")
 	require.NoError(t, err)
 	t.Cleanup(func() {
 		require.NoError(t, os.RemoveAll(dir))
 	})
+
 	return dir
 }
