@@ -16,13 +16,15 @@ func main() {
 		panic(err)
 	}
 
+	defer func() {
+		if err = reader.Close(); err != nil {
+			panic(err)
+		}
+	}()
+
 	for {
 		t, data, err := reader.Read()
 		if errors.Is(err, log.ErrEOL) {
-			if err = reader.Close(); err != nil {
-				panic(err)
-			}
-
 			return
 		}
 

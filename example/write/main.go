@@ -15,15 +15,17 @@ func main() {
 		panic(err)
 	}
 
+	defer func() {
+		err = writer.Close()
+		if err != nil {
+			panic(err)
+		}
+	}()
+
 	t, err := writer.Write([]byte("entry"))
 	if err != nil {
 		panic(err)
 	}
 
 	fmt.Println("Entry written with t=", t)
-
-	err = writer.Close()
-	if err != nil {
-		panic(err)
-	}
 }
