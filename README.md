@@ -33,3 +33,4 @@ The library is under heavy development, not ready for production use.
 * [ ] Verify integrity using checksums
 * [ ] Add replication to other filesystems
 * [ ] Add higher level functions for reading and writing using structures (instead of byte slices)  
+* [ ] Improve performance of Write by using batch
