@@ -24,3 +24,12 @@ See [example/write/main.go](example/write/main.go). More examples in [example di
 # Project Status
 
 The library is under heavy development, not ready for production use.
+
+# Project Plan
+
+* [ ] Use segments in order to implement efficient compaction
+* [ ] Implement compaction 
+* [ ] Reader should allow to read entries starting from given time
+* [ ] Verify integrity using checksums
+* [ ] Add replication to other filesystems
+* [ ] Add higher level functions for reading and writing using structures (instead of byte slices)  
