@@ -13,10 +13,14 @@ Go library for writing and reading application logs, which can be used as an:
 * the most efficient way of storing the change is to store only the data that has been modified:
   this can be an event, command or a transaction.
 
-## Install
+# Install
 
 `go get -u github.com/jacekolszak/logstore`
 
-## Quick Start
+# Quick Start
 
 See [example/write/main.go](example/write/main.go). More examples in [example directory](example).
+
+# Project Status
+
+The library is under heavy development, not ready for production use.
