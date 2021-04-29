@@ -1,6 +1,6 @@
 # What is it?
 
-Go library for writing and reading application logs, which can be used as an:
+Go library for writing and reading append-only application logs, which can be used as an:
 
 * event store
 * commit log
