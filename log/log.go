@@ -4,6 +4,10 @@
 package log
 
 import (
+	"fmt"
+	"os"
+	"path"
+	"strings"
 	"time"
 )
 
@@ -24,12 +28,21 @@ func (l *Log) OpenWriter(options ...OpenWriterOption) (Writer, error) {
 type OpenWriterOption func(*WriterSettings) error
 
 type WriterSettings struct {
-	now func() time.Time
+	now                 func() time.Time
+	maxSegmentSizeBytes int64
 }
 
 func NowFunc(f func() time.Time) OpenWriterOption {
 	return func(s *WriterSettings) error {
 		s.now = f
+
+		return nil
+	}
+}
+
+func MaxSegmentSizeMB(megabytes int) OpenWriterOption {
+	return func(s *WriterSettings) error {
+		s.maxSegmentSizeBytes = int64(megabytes) * oneMegabyte
 
 		return nil
 	}
@@ -53,4 +66,38 @@ type ReaderSettings struct{}
 type Reader interface {
 	Read() (time.Time, []byte, error)
 	Close() error
+}
+
+func (l *Log) Segments() ([]Segment, error) {
+	var segments []Segment
+
+	files, err := os.ReadDir(l.dir)
+	if err != nil {
+		return nil, fmt.Errorf("os.ReadDir failed: %w", err)
+	}
+
+	for _, f := range files {
+		name := f.Name()
+		if !f.IsDir() && strings.HasSuffix(name, ".segment") {
+			file := segmentFilename(name)
+			segment := Segment{StartingAt: file.StartedAt()}
+			segments = append(segments, segment)
+		}
+	}
+
+	return segments, nil
+}
+
+func (l *Log) RemoveSegmentStartingAt(t time.Time) error {
+	segmentFilename := path.Join(l.dir, segmentFilenameStartingAt(t))
+
+	if err := os.Remove(segmentFilename); err != nil {
+		return fmt.Errorf("removing file %s failed %w", segmentFilename, err)
+	}
+
+	return nil
+}
+
+type Segment struct {
+	StartingAt time.Time
 }

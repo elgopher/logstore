@@ -24,7 +24,7 @@ func TempDir(t *testing.T) string {
 	return dir
 }
 
-func CloseCloser(t *testing.T, c io.Closer) {
+func Close(t *testing.T, c io.Closer) {
 	t.Helper()
 
 	if c == nil {

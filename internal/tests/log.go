@@ -50,7 +50,7 @@ func ReadAll(t *testing.T, l *log.Log, options ...log.OpenReaderOption) []Entry 
 	t.Helper()
 
 	reader, err := l.OpenReader(options...)
-	defer CloseCloser(t, reader)
+	defer Close(t, reader)
 	require.NoError(t, err)
 
 	var entries []Entry
@@ -70,4 +70,14 @@ func ReadAll(t *testing.T, l *log.Log, options ...log.OpenReaderOption) []Entry 
 type Entry struct {
 	Time time.Time
 	Data []byte
+}
+
+func WriteEntry(t *testing.T, writer log.Writer, sizeInBytes int64) time.Time {
+	t.Helper()
+
+	data := make([]byte, sizeInBytes)
+	entryTime, err := writer.Write(data)
+	require.NoError(t, err)
+
+	return entryTime
 }

@@ -26,17 +26,28 @@ func (l *Log) openReader(options []OpenReaderOption) (Reader, error) {
 		}
 	}
 
-	f, err := os.Open(path.Join(l.dir, "segment.data"))
-	if os.IsNotExist(err) {
+	segments, err := l.Segments()
+	if err != nil {
+		return nil, err
+	}
+
+	if len(segments) == 0 {
 		return &emptyLogReader{}, nil
 	}
 
+	const oldestSegmentIndex = 0
+	oldestSegment := segments[oldestSegmentIndex]
+
+	f, err := openSegmentFileForRead(l.dir, oldestSegment)
 	if err != nil {
-		return nil, fmt.Errorf("opening segment file failed: %w", err)
+		return nil, err
 	}
 
-	return &singleSegmentReader{
-		currentSegment: f,
+	return &segmentsReader{
+		segmentFile:    f,
+		segments:       segments,
+		currentSegment: oldestSegmentIndex,
+		dir:            l.dir,
 	}, nil
 }
 
@@ -50,46 +61,66 @@ func (r *emptyLogReader) Close() error {
 	return nil
 }
 
-type singleSegmentReader struct {
-	currentSegment *os.File
+func openSegmentFileForRead(dir string, segment Segment) (*os.File, error) {
+	f, err := os.Open(path.Join(dir, segmentFilenameStartingAt(segment.StartingAt)))
+	if err != nil {
+		return nil, fmt.Errorf("opening segment file failed: %w", err)
+	}
+
+	return f, nil
 }
 
-func (r *singleSegmentReader) Read() (time.Time, []byte, error) {
+type segmentsReader struct {
+	segmentFile    *os.File
+	segments       []Segment
+	currentSegment int
+	dir            string
+}
+
+func (r *segmentsReader) Read() (time.Time, []byte, error) {
 	t := time.Time{}
 	bytes := make([]byte, 15)
 
-	_, err := io.ReadAtLeast(r.currentSegment, bytes, 15)
+	_, err := io.ReadAtLeast(r.segmentFile, bytes, 15)
+	if errors.Is(err, io.EOF) {
+		r.currentSegment++
+		if r.currentSegment >= len(r.segments) {
+			return time.Time{}, nil, ErrEOL
+		}
+
+		_ = r.segmentFile.Close()
+
+		r.segmentFile, err = openSegmentFileForRead(r.dir, r.segments[r.currentSegment])
+		if err != nil {
+			return time.Time{}, nil, err
+		}
+
+		return r.Read()
+	}
+
 	if err != nil {
-		return time.Time{}, nil, wrapReadError("reading entry time failed", err)
+		return time.Time{}, nil, fmt.Errorf("reading entry time failed: %w", err)
 	}
 
 	if err = t.UnmarshalBinary(bytes[:15]); err != nil {
-		return time.Time{}, nil, wrapReadError("unmarshaling entry time failed", err)
+		return time.Time{}, nil, fmt.Errorf("unmarshaling entry time failed: %w", err)
 	}
 
 	var length uint32
-	if err = binary.Read(r.currentSegment, binary.LittleEndian, &length); err != nil {
-		return time.Time{}, nil, wrapReadError("reading entry len failed", err)
+	if err = binary.Read(r.segmentFile, binary.LittleEndian, &length); err != nil {
+		return time.Time{}, nil, fmt.Errorf("reading entry len failed: %w", err)
 	}
 
 	data := make([]byte, length)
-	if _, err = r.currentSegment.Read(data); err != nil {
-		return time.Time{}, nil, wrapReadError("reading entry data failed", err)
+	if _, err = r.segmentFile.Read(data); err != nil {
+		return time.Time{}, nil, fmt.Errorf("reading entry data failed: %w", err)
 	}
 
 	return t, data, nil
 }
 
-func wrapReadError(msg string, err error) error {
-	if errors.Is(err, io.EOF) {
-		return ErrEOL
-	}
-
-	return fmt.Errorf("%s: %w", msg, err)
-}
-
-func (r *singleSegmentReader) Close() error {
-	if err := r.currentSegment.Close(); err != nil {
+func (r *segmentsReader) Close() error {
+	if err := r.segmentFile.Close(); err != nil {
 		return fmt.Errorf("error closing segment file: %w", err)
 	}
 

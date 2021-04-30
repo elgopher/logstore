@@ -13,10 +13,12 @@ issues:
 linters:
   enable:
     - testpackage
+    - exportloopref
   disable:
     - paralleltest
     - gofumpt
     - exhaustivestruct
+    - scopelint
   presets:
     - bugs
     - complexity
