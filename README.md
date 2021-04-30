@@ -28,7 +28,7 @@ The library is under heavy development, not ready for production use.
 # Project Plan
 
 * [x] API for writing and reading entries from a log
-* [ ] Use segments in order to implement efficient compaction
+* [x] Use segments in order to implement efficient compaction
 * [ ] Implement compaction 
 * [ ] Reader should allow to read entries starting from given time
 * [ ] Verify integrity using checksums
