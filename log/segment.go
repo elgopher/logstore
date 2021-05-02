@@ -27,7 +27,7 @@ func (s segmentFilename) StartedAt() time.Time {
 }
 
 func segmentFilenameStartingAt(t time.Time) string {
-	return t.Format(segmentFilenameDateFormat) + segmentFilenameExtension
+	return t.UTC().Format(segmentFilenameDateFormat) + segmentFilenameExtension
 }
 
 func (l *Log) segmentFilenameForWriter(now func() time.Time) (string, error) {
