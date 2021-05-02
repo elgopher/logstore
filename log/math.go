@@ -3,8 +3,11 @@
 
 package log
 
+import "time"
+
 const (
-	oneMegabyte  int64 = 1024 * 1024
-	oneGigabyte        = 1024 * oneMegabyte
-	sizeOfUint32       = 4
+	oneMegabyte int64 = 1024 * 1024
+	oneGigabyte       = 1024 * oneMegabyte
+
+	oneMonth = time.Hour * 24 * 30
 )

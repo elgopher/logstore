@@ -30,6 +30,7 @@ type OpenWriterOption func(*WriterSettings) error
 type WriterSettings struct {
 	now                 func() time.Time
 	maxSegmentSizeBytes int64
+	maxSegmentDuration  time.Duration
 }
 
 func NowFunc(f func() time.Time) OpenWriterOption {
@@ -43,6 +44,14 @@ func NowFunc(f func() time.Time) OpenWriterOption {
 func MaxSegmentSizeMB(megabytes int) OpenWriterOption {
 	return func(s *WriterSettings) error {
 		s.maxSegmentSizeBytes = int64(megabytes) * oneMegabyte
+
+		return nil
+	}
+}
+
+func MaxSegmentDuration(duration time.Duration) OpenWriterOption {
+	return func(s *WriterSettings) error {
+		s.maxSegmentDuration = duration
 
 		return nil
 	}

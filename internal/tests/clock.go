@@ -9,8 +9,12 @@ type Clock struct {
 	CurrentTime *time.Time
 }
 
-func (c *Clock) MoveForward() {
-	t := c.CurrentTime.Add(time.Hour)
+func (c *Clock) MoveForwardOneHour() {
+	c.MoveForward(time.Hour)
+}
+
+func (c *Clock) MoveForward(d time.Duration) {
+	t := c.CurrentTime.Add(d)
 	c.CurrentTime = &t
 }
 
