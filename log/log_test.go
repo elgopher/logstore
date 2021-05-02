@@ -114,13 +114,16 @@ func TestLog_Segments(t *testing.T) {
 
 	t.Run("should create a new segment on first write", func(t *testing.T) {
 		l, writer := tests.OpenLogWithWriter(t)
-		_, _ = writer.Write(data1)
+		t1, _ := writer.Write(data1)
 		// when
 		segments, err := l.Segments()
 		// then
 		require.NoError(t, err)
 		require.Len(t, segments, 1)
 		assert.Len(t, segments, 1)
+		assert.True(t,
+			segments[0].StartingAt.Before(t1) || segments[0].StartingAt.Equal(t1),
+			"segment start should be <= time of first of entry")
 	})
 
 	t.Run("should return sorted segments", func(t *testing.T) {
