@@ -4,7 +4,6 @@
 package log_test
 
 import (
-	"errors"
 	"path"
 	"testing"
 	"time"
@@ -18,8 +17,6 @@ import (
 var (
 	data1 = []byte("data1")
 	data2 = []byte("data2")
-
-	errFixed = errors.New("error")
 )
 
 func TestNew(t *testing.T) {
@@ -33,13 +30,13 @@ func TestLog_OpenReader(t *testing.T) {
 	t.Run("should return error for option returning error", func(t *testing.T) {
 		dir := tests.TempDir(t)
 		failingOption := func(*log.ReaderSettings) error {
-			return errFixed
+			return tests.ErrFixed
 		}
 		// when
 		reader, err := log.New(dir).OpenReader(failingOption)
 		defer tests.Close(t, reader)
 		// then
-		assert.ErrorIs(t, err, errFixed)
+		assert.ErrorIs(t, err, tests.ErrFixed)
 		assert.Nil(t, reader)
 	})
 
@@ -69,13 +66,13 @@ func TestLog_OpenWriter(t *testing.T) {
 	t.Run("should return error for option returning error", func(t *testing.T) {
 		dir := tests.TempDir(t)
 		failingOption := func(*log.WriterSettings) error {
-			return errFixed
+			return tests.ErrFixed
 		}
 		// when
 		writer, err := log.New(dir).OpenWriter(failingOption)
 		defer tests.Close(t, writer)
 		// then
-		assert.ErrorIs(t, err, errFixed)
+		assert.ErrorIs(t, err, tests.ErrFixed)
 		assert.Nil(t, writer)
 	})
 
@@ -162,6 +159,17 @@ func TestLog_RemoveSegment(t *testing.T) {
 		assert.Error(t, err)
 	})
 
+	t.Run("should not be possible to remove last segment", func(t *testing.T) {
+		l, writer := tests.OpenLogWithWriter(t)
+		tests.WriteEntry(t, writer, tests.OneMegabyte)
+		segments, _ := l.Segments()
+		assert.Len(t, segments, 1)
+		// when
+		err := l.RemoveSegmentStartingAt(segments[0].StartingAt)
+		// then
+		assert.ErrorIs(t, err, log.ErrInvalidParameter)
+	})
+
 	t.Run("should remove segment", func(t *testing.T) {
 		l, writer := tests.OpenLogWithWriter(t, log.MaxSegmentSizeMB(1))
 		tests.WriteEntry(t, writer, tests.OneMegabyte)
@@ -200,17 +208,4 @@ func fixedNow(t time.Time) func() time.Time {
 	return func() time.Time {
 		return t
 	}
-}
-
-type clock struct {
-	currentTime *time.Time
-}
-
-func (c *clock) moveForward() {
-	t := c.currentTime.Add(time.Hour)
-	c.currentTime = &t
-}
-
-func (c *clock) Now() time.Time {
-	return *c.currentTime
 }

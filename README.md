@@ -23,13 +23,14 @@ See [example/write/main.go](example/write/main.go). More examples in [example di
 
 # Project Status
 
-The library is under heavy development, not ready for production use.
+The library is under heavy development, not ready for production use yet.
 
 # Project Plan
 
 * [x] API for writing and reading entries from a log
 * [x] Use segments in order to implement efficient compaction
-* [ ] Implement compaction 
+* [ ] Add segment max duration 
+* [x] Implement compaction (manual and goroutine)
 * [ ] Reader should allow to read entries starting from given time
 * [ ] Verify integrity using checksums
 * [ ] Add replication to other filesystems

@@ -54,13 +54,13 @@ func TestWriter_Write(t *testing.T) {
 	t.Run("should increase time artificially when time has gone back", func(t *testing.T) {
 		t1 := time2006(t)
 		t2 := time2005(t)
-		clock := &clock{
-			currentTime: &t1,
+		clock := &tests.Clock{
+			CurrentTime: &t1,
 		}
 		writer := tests.OpenLogWriter(t, log.NowFunc(clock.Now))
 		// when
 		actualTime1, err1 := writer.Write(data1)
-		clock.currentTime = &t2
+		clock.CurrentTime = &t2
 		actualTime2, err2 := writer.Write(data2)
 		// then
 		require.NoError(t, err1)
@@ -85,13 +85,13 @@ func TestWriter_Write(t *testing.T) {
 
 	t.Run("should append 2 entries", func(t *testing.T) {
 		now := time2006(t)
-		clock := &clock{
-			currentTime: &now,
+		clock := &tests.Clock{
+			CurrentTime: &now,
 		}
 		l, writer := tests.OpenLogWithWriter(t, log.NowFunc(clock.Now))
 		// when
 		_, err1 := writer.Write(data1)
-		clock.moveForward()
+		clock.MoveForward()
 		t2, err2 := writer.Write(data2)
 		// then
 		require.NoError(t, err1)
@@ -160,8 +160,8 @@ func TestWriter_Write(t *testing.T) {
 
 	t.Run("should append entries to 2 segments", func(t *testing.T) {
 		startingTime := time2006(t)
-		clock := &clock{
-			currentTime: &startingTime,
+		clock := &tests.Clock{
+			CurrentTime: &startingTime,
 		}
 		entry1 := make([]byte, tests.OneMegabyte)
 		entry1[0] = 1
@@ -170,7 +170,7 @@ func TestWriter_Write(t *testing.T) {
 		l, writer := tests.OpenLogWithWriter(t, log.NowFunc(clock.Now), log.MaxSegmentSizeMB(1))
 		// when
 		t1, err1 := writer.Write(entry1)
-		clock.moveForward()
+		clock.MoveForward()
 		t2, err2 := writer.Write(entry2)
 		// then
 		require.NoError(t, err1)
