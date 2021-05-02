@@ -5,6 +5,7 @@ package log_test
 
 import (
 	"testing"
+	"time"
 
 	"github.com/jacekolszak/logstore/internal/tests"
 	"github.com/jacekolszak/logstore/log"
@@ -91,7 +92,7 @@ func TestWriter_Write(t *testing.T) {
 		l, writer := tests.OpenLogWithWriter(t, log.NowFunc(clock.Now))
 		// when
 		_, err1 := writer.Write(data1)
-		clock.MoveForward()
+		clock.MoveForwardOneHour()
 		t2, err2 := writer.Write(data2)
 		// then
 		require.NoError(t, err1)
@@ -170,7 +171,7 @@ func TestWriter_Write(t *testing.T) {
 		l, writer := tests.OpenLogWithWriter(t, log.NowFunc(clock.Now), log.MaxSegmentSizeMB(1))
 		// when
 		t1, err1 := writer.Write(entry1)
-		clock.MoveForward()
+		clock.MoveForwardOneHour()
 		t2, err2 := writer.Write(entry2)
 		// then
 		require.NoError(t, err1)
@@ -181,5 +182,21 @@ func TestWriter_Write(t *testing.T) {
 		assert.Equal(t, entry1, entries[0].Data)
 		assert.Equal(t, t2, entries[1].Time)
 		assert.Equal(t, entry2, entries[1].Data)
+	})
+
+	t.Run("should create new segment when max duration is reached", func(t *testing.T) {
+		startingTime := time2006(t)
+		clock := &tests.Clock{
+			CurrentTime: &startingTime,
+		}
+		l, writer := tests.OpenLogWithWriter(t, log.NowFunc(clock.Now), log.MaxSegmentDuration(time.Second))
+		// when
+		_, _ = writer.Write(data1)
+		clock.MoveForward(time.Second + time.Nanosecond)
+		_, _ = writer.Write(data2)
+		// then
+		segments, err := l.Segments()
+		require.NoError(t, err)
+		assert.Len(t, segments, 2)
 	})
 }

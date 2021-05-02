@@ -32,9 +32,9 @@ The library is under heavy development, not ready for production use yet.
 
 * [x] API for writing and reading entries from a log
 * [x] Use segments in order to implement efficient compaction
-* [ ] Add segment max duration 
+* [x] Add segment max duration 
 * [x] Implement compaction (manual and goroutine)
-* [ ] Reader should allow to read entries starting from given time
+* [ ] Reader should allow reading entries starting from given time
 * [ ] Verify integrity using checksums
 * [ ] Add replication to other filesystems
 * [ ] Add higher level functions for reading and writing using structures (instead of byte slices)  
