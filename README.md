@@ -9,9 +9,12 @@ Go library for writing and reading append-only application logs, which can be us
 
 # Why it is needed?
 
-* we need to store changes made to a big database after every (even tiny) change
-* the most efficient way of storing the change is to store only the data that has been modified:
-  this can be an event, command or a transaction.
+Let's say you have a large data structure which is modified by some command. After such modificaton you can either:
+
+* save a whole snapshot of data to disk (simple to implement, but not efficient if data structure is big)
+* or store the actual change in a form of event, command or transaction (much more efficient, harder to implement)
+
+Logstore is an API for storing and retrieving such entries.
 
 # Install
 
