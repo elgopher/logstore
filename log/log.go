@@ -91,6 +91,15 @@ func (l *Log) Segments() ([]Segment, error) {
 func (l *Log) RemoveSegmentStartingAt(t time.Time) error {
 	segmentFilename := path.Join(l.dir, segmentFilenameStartingAt(t))
 
+	segments, err := l.Segments()
+	if err != nil {
+		return fmt.Errorf("listing segments failed: %w", err)
+	}
+
+	if len(segments) == 1 {
+		return fmt.Errorf("cant remove last segment: %w", ErrInvalidParameter)
+	}
+
 	if err := os.Remove(segmentFilename); err != nil {
 		return fmt.Errorf("removing file %s failed %w", segmentFilename, err)
 	}

@@ -6,6 +6,7 @@ package log
 import "errors"
 
 var (
-	ErrEOL    = errors.New("eol (end of log):  reading log finished")
-	ErrLocked = errors.New("log is already locked for writing")
+	ErrEOL              = errors.New("eol (end of log):  reading log finished")
+	ErrLocked           = errors.New("log is already locked for writing")
+	ErrInvalidParameter = errors.New("invalid parameter")
 )
