@@ -22,6 +22,7 @@ func main() {
 		}
 	}()
 
+	// Write appends an entry to the log, returning a unique monotonic Time
 	t, err := writer.Write([]byte("entry"))
 	if err != nil {
 		panic(err)
