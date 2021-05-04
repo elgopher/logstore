@@ -70,7 +70,19 @@ func (l *Log) OpenReader(options ...OpenReaderOption) (Reader, error) {
 
 type OpenReaderOption func(*ReaderSettings) error
 
-type ReaderSettings struct{}
+type ReaderSettings struct {
+	openOldestSegment func(dir string, segments []Segment) (*os.File, int, error)
+}
+
+func StartingFrom(t time.Time) OpenReaderOption {
+	return func(s *ReaderSettings) error {
+		s.openOldestSegment = func(dir string, segments []Segment) (*os.File, int, error) {
+			return openSegmentStartingAt(t, dir, segments)
+		}
+
+		return nil
+	}
+}
 
 type Reader interface {
 	Read() (time.Time, []byte, error)

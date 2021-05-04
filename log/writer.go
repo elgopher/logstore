@@ -4,7 +4,6 @@
 package log
 
 import (
-	"encoding/binary"
 	"fmt"
 	"os"
 	"path"
@@ -199,21 +198,8 @@ func (w *writer) Write(entry []byte, options ...WriteOption) (time.Time, error) 
 }
 
 func (w *writer) writeEntry(t time.Time, entry []byte) error {
-	timeBinary, err := t.MarshalBinary()
-	if err != nil {
-		return fmt.Errorf("marshaling entry time failed: %w", err)
-	}
-
-	if _, err = w.currentSegment.Write(timeBinary); err != nil {
-		return fmt.Errorf("writing entry time failed: %w", err)
-	}
-
-	if err = binary.Write(w.currentSegment, binary.LittleEndian, uint32(len(entry))); err != nil {
-		return fmt.Errorf("writing entry len failed: %w", err)
-	}
-
-	if _, err = w.currentSegment.Write(entry); err != nil {
-		return fmt.Errorf("writing entry data failed: %w", err)
+	if err := encodeEntry(w.currentSegment, t, entry); err != nil {
+		return err
 	}
 
 	if w.currentSegment.maxSizeExceeded(w.maxSegmentSizeBytes) ||
