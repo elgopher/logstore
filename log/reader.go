@@ -4,7 +4,6 @@
 package log
 
 import (
-	"encoding/binary"
 	"errors"
 	"fmt"
 	"io"
@@ -14,7 +13,9 @@ import (
 )
 
 func (l *Log) openReader(options []OpenReaderOption) (Reader, error) {
-	settings := &ReaderSettings{}
+	settings := &ReaderSettings{
+		openOldestSegment: openOldestSegmentAtTheBegging,
+	}
 
 	for _, applyOption := range options {
 		if applyOption == nil {
@@ -35,20 +36,59 @@ func (l *Log) openReader(options []OpenReaderOption) (Reader, error) {
 		return &emptyLogReader{}, nil
 	}
 
-	const oldestSegmentIndex = 0
-	oldestSegment := segments[oldestSegmentIndex]
-
-	f, err := openSegmentFileForRead(l.dir, oldestSegment)
+	segmentFile, segmentIndex, err := settings.openOldestSegment(l.dir, segments)
 	if err != nil {
 		return nil, err
 	}
 
 	return &segmentsReader{
-		segmentFile:    f,
+		segmentFile:    segmentFile,
 		segments:       segments,
-		currentSegment: oldestSegmentIndex,
+		currentSegment: segmentIndex,
 		dir:            l.dir,
 	}, nil
+}
+
+func openOldestSegmentAtTheBegging(dir string, segments []Segment) (*os.File, int, error) {
+	const oldestSegmentIndex = 0
+	oldestSegment := segments[oldestSegmentIndex]
+
+	f, err := openSegmentFileForRead(dir, oldestSegment)
+	if err != nil {
+		return nil, 0, err
+	}
+
+	return f, oldestSegmentIndex, nil
+}
+
+func openSegmentStartingAt(t time.Time, dir string, segments []Segment) (*os.File, int, error) {
+	oldestSegmentIndex := 0
+
+	for i, segment := range segments {
+		if segment.StartingAt.After(t) {
+			break
+		}
+
+		oldestSegmentIndex = i
+	}
+
+	oldestSegment := segments[oldestSegmentIndex]
+
+	f, err := openSegmentFileForRead(dir, oldestSegment)
+	if err != nil {
+		return nil, 0, err
+	}
+
+	pos, err := findClosestEntryPosition(t, f)
+	if err != nil {
+		return nil, 0, err
+	}
+
+	if _, err = f.Seek(pos, io.SeekStart); err != nil {
+		return nil, 0, fmt.Errorf("seeking to entry starting position failed: %w", err)
+	}
+
+	return f, oldestSegmentIndex, nil
 }
 
 type emptyLogReader struct{}
@@ -78,10 +118,7 @@ type segmentsReader struct {
 }
 
 func (r *segmentsReader) Read() (time.Time, []byte, error) {
-	t := time.Time{}
-	bytes := make([]byte, 15)
-
-	_, err := io.ReadAtLeast(r.segmentFile, bytes, 15)
+	t, data, err := decodeEntry(r.segmentFile)
 	if errors.Is(err, io.EOF) {
 		r.currentSegment++
 		if r.currentSegment >= len(r.segments) {
@@ -96,24 +133,6 @@ func (r *segmentsReader) Read() (time.Time, []byte, error) {
 		}
 
 		return r.Read()
-	}
-
-	if err != nil {
-		return time.Time{}, nil, fmt.Errorf("reading entry time failed: %w", err)
-	}
-
-	if err = t.UnmarshalBinary(bytes[:15]); err != nil {
-		return time.Time{}, nil, fmt.Errorf("unmarshaling entry time failed: %w", err)
-	}
-
-	var length uint32
-	if err = binary.Read(r.segmentFile, binary.LittleEndian, &length); err != nil {
-		return time.Time{}, nil, fmt.Errorf("reading entry len failed: %w", err)
-	}
-
-	data := make([]byte, length)
-	if _, err = r.segmentFile.Read(data); err != nil {
-		return time.Time{}, nil, fmt.Errorf("reading entry data failed: %w", err)
 	}
 
 	return t, data, nil
