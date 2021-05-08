@@ -189,6 +189,40 @@ func TestLog_RemoveSegment(t *testing.T) {
 	})
 }
 
+func TestLog_LastEntry(t *testing.T) {
+	t.Run("should return error when log is empty", func(t *testing.T) {
+		l := log.New(tests.TempDir(t))
+		// when
+		_, bytes, err := l.LastEntry()
+		// then
+		assert.ErrorIs(t, err, log.ErrEOL)
+		assert.Nil(t, bytes)
+	})
+
+	t.Run("should return last entry for single entry log", func(t *testing.T) {
+		l, writer := tests.OpenLogWithWriter(t)
+		t1, _ := writer.Write(data1)
+		// when
+		actualTime, bytes, err := l.LastEntry()
+		// then
+		require.NoError(t, err)
+		assert.Equal(t, data1, bytes)
+		assert.True(t, t1.Equal(actualTime))
+	})
+
+	t.Run("should return last entry for two entries log", func(t *testing.T) {
+		l, writer := tests.OpenLogWithWriter(t)
+		_, _ = writer.Write(data1)
+		t2, _ := writer.Write(data2)
+		// when
+		actualTime, bytes, err := l.LastEntry()
+		// then
+		require.NoError(t, err)
+		assert.Equal(t, data2, bytes)
+		assert.True(t, t2.Equal(actualTime))
+	})
+}
+
 func fixedNow(t time.Time) func() time.Time {
 	return func() time.Time {
 		return t
