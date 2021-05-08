@@ -37,11 +37,11 @@ The library is under heavy development, not ready for production use yet.
 * [x] Add segment max duration 
 * [x] Implement compaction (manual and goroutine)
 * [x] Reader should allow reading entries starting from given time
-* [ ] Add replication to other filesystems
-* [ ] Add higher level functions for reading and writing using structures (instead of byte slices)  
+* [ ] Add higher level functions for reading and writing using structures (instead of byte slices)
 
 ## To be done later
 
+* [ ] Add replication to other filesystems
 * [ ] Verify integrity using checksums
 * [ ] Improve performance of Write by using batch
 * [ ] Improve performance of Read with starting time option by using binary search
