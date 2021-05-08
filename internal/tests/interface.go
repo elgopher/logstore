@@ -3,6 +3,9 @@
 
 package tests
 
-import "errors"
-
-var ErrFixed = errors.New("error")
+type TestingT interface {
+	Errorf(format string, args ...interface{})
+	FailNow()
+	Helper()
+	Cleanup(func())
+}

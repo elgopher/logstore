@@ -4,6 +4,9 @@
 package log
 
 import (
+	"fmt"
+	"os"
+	"path"
 	"strings"
 	"time"
 )
@@ -30,19 +33,78 @@ func segmentFilenameStartingAt(t time.Time) string {
 	return t.UTC().Format(segmentFilenameDateFormat) + segmentFilenameExtension
 }
 
-func (l *Log) segmentFilenameForWriter(now func() time.Time) (string, error) {
+type segmentWriter struct {
+	file      *os.File
+	sizeBytes int64
+	startTime time.Time
+}
+
+func (l *Log) openLastUsedSegmentWriter() (*segmentWriter, error) {
 	segments, err := l.Segments()
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
-	var filename string
 	if len(segments) == 0 {
-		filename = segmentFilenameStartingAt(now())
-	} else {
-		lastSegment := segments[len(segments)-1]
-		filename = segmentFilenameStartingAt(lastSegment.StartingAt)
+		return nil, nil
 	}
 
-	return filename, nil
+	lastSegment := segments[len(segments)-1]
+
+	return openSegmentWriter(l.dir, lastSegment.StartingAt)
+}
+
+func openSegmentWriter(dir string, startTime time.Time) (*segmentWriter, error) {
+	filename := path.Join(dir, segmentFilenameStartingAt(startTime))
+
+	segmentFile, err := openFileForAppending(filename)
+	if err != nil {
+		return nil, err
+	}
+
+	stat, err := os.Stat(filename)
+	if err != nil {
+		return nil, fmt.Errorf("stat failed for file %s: %w", filename, err)
+	}
+
+	size := stat.Size()
+
+	return &segmentWriter{
+		file:      segmentFile,
+		sizeBytes: size,
+		startTime: startTime,
+	}, nil
+}
+
+func (l *segmentWriter) Write(b []byte) (int, error) {
+	n, err := l.file.Write(b)
+	defer func() {
+		l.sizeBytes += int64(n)
+	}()
+
+	if err != nil {
+		return n, fmt.Errorf("writing to segment failed: %w", err)
+	}
+
+	return n, nil
+}
+
+func (l *segmentWriter) maxSizeExceeded(maxSize int64) bool {
+	return l.sizeBytes > maxSize
+}
+
+func (l *segmentWriter) maxDurationExceeded(t time.Time, maxSegmentDuration time.Duration) bool {
+	return t.After(l.startTime.Add(maxSegmentDuration))
+}
+
+func (l *segmentWriter) close() error {
+	if l == nil {
+		return nil
+	}
+
+	if err := l.file.Close(); err != nil {
+		return fmt.Errorf("closing segment file failed: %w", err)
+	}
+
+	return nil
 }
