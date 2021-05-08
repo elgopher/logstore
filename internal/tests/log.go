@@ -12,7 +12,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func OpenLogWriter(t *testing.T, options ...log.OpenWriterOption) log.Writer {
+func OpenLogWriter(t TestingT, options ...log.OpenWriterOption) log.Writer {
 	t.Helper()
 
 	_, writer := OpenLogWithWriter(t, options...)
@@ -20,7 +20,7 @@ func OpenLogWriter(t *testing.T, options ...log.OpenWriterOption) log.Writer {
 	return writer
 }
 
-func OpenLogWithWriter(t *testing.T, options ...log.OpenWriterOption) (*log.Log, log.Writer) {
+func OpenLogWithWriter(t TestingT, options ...log.OpenWriterOption) (*log.Log, log.Writer) {
 	t.Helper()
 
 	l := log.New(TempDir(t))

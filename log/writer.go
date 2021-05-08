@@ -32,31 +32,13 @@ func (l *Log) openWriter(options []OpenWriterOption) (Writer, error) {
 		return nil, err
 	}
 
-	filename, err := l.segmentFilenameForWriter(settings.now)
+	currentSegment, err := l.openLastUsedSegmentWriter()
 	if err != nil {
 		return nil, err
 	}
-
-	file := path.Join(l.dir, filename)
-
-	segmentFile, err := openFileForAppending(file)
-	if err != nil {
-		return nil, err
-	}
-
-	stat, err := os.Stat(file)
-	if err != nil {
-		return nil, fmt.Errorf("stat failed for file %s: %w", file, err)
-	}
-
-	size := stat.Size()
 
 	return &writer{
-		currentSegment: &segmentWriter{
-			file:      segmentFile,
-			sizeBytes: size,
-			startTime: segmentFilename(filename).StartedAt(),
-		},
+		currentSegment:      currentSegment,
 		now:                 settings.now,
 		lastTime:            lastTime,
 		maxSegmentSizeBytes: settings.maxSegmentSizeBytes,
@@ -132,41 +114,6 @@ type writer struct {
 	dir                 string
 }
 
-type segmentWriter struct {
-	file      *os.File
-	sizeBytes int64
-	startTime time.Time
-}
-
-func (l *segmentWriter) Write(b []byte) (int, error) {
-	n, err := l.file.Write(b)
-	defer func() {
-		l.sizeBytes += int64(n)
-	}()
-
-	if err != nil {
-		return n, fmt.Errorf("writing to segment failed: %w", err)
-	}
-
-	return n, nil
-}
-
-func (l *segmentWriter) maxSizeExceeded(maxSize int64) bool {
-	return l.sizeBytes > maxSize
-}
-
-func (l *segmentWriter) maxDurationExceeded(t time.Time, maxSegmentDuration time.Duration) bool {
-	return t.After(l.startTime.Add(maxSegmentDuration))
-}
-
-func (l *segmentWriter) close() error {
-	if err := l.file.Close(); err != nil {
-		return fmt.Errorf("closing segment file failed: %w", err)
-	}
-
-	return nil
-}
-
 func (w *writer) Close() error {
 	if err := w.lock.Unlock(); err != nil {
 		_ = w.currentSegment.close()
@@ -181,23 +128,40 @@ func (w *writer) Close() error {
 	return nil
 }
 
-func (w *writer) Write(entry []byte, options ...WriteOption) (time.Time, error) {
+func (w *writer) Write(entry []byte) (time.Time, error) {
 	t := w.now()
 
 	if !t.After(w.lastTime) {
 		t = w.lastTime.Add(time.Nanosecond)
 	}
 
+	return t, w.WriteWithTime(t, entry)
+}
+
+func (w *writer) WriteWithTime(t time.Time, entry []byte) error {
+	if !t.After(w.lastTime) {
+		return fmt.Errorf("forced time is not after last entry time: %w", ErrInvalidParameter)
+	}
+
 	if err := w.writeEntry(t, entry); err != nil {
-		return time.Time{}, err
+		return err
 	}
 
 	w.lastTime = t
 
-	return t, nil
+	return nil
 }
 
 func (w *writer) writeEntry(t time.Time, entry []byte) error {
+	if w.currentSegment == nil {
+		var err error
+
+		w.currentSegment, err = openSegmentWriter(w.dir, t)
+		if err != nil {
+			return err
+		}
+	}
+
 	if err := encodeEntry(w.currentSegment, t, entry); err != nil {
 		return err
 	}

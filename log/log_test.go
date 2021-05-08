@@ -17,6 +17,9 @@ import (
 var (
 	data1 = []byte("data1")
 	data2 = []byte("data2")
+
+	time2005 = tests.MustTime("2005-02-04T20:01:37Z")
+	time2006 = tests.MustTime("2006-01-02T15:04:05Z")
 )
 
 func TestNew(t *testing.T) {
@@ -125,7 +128,7 @@ func TestLog_Segments(t *testing.T) {
 
 	t.Run("should return sorted segments", func(t *testing.T) {
 		entry := make([]byte, tests.OneMegabyte)
-		startingTime := time2006(t)
+		startingTime := time2006
 
 		testCases := map[string][]log.OpenWriterOption{
 			"real time": {log.MaxSegmentSizeMB(1)},
@@ -184,24 +187,6 @@ func TestLog_RemoveSegment(t *testing.T) {
 		require.NoError(t, err)
 		assert.Equal(t, segmentsBefore[1:], segmentsAfter)
 	})
-}
-
-func time2006(t *testing.T) time.Time {
-	t.Helper()
-
-	tt, err := time.Parse(time.RFC3339, "2006-01-02T15:04:05Z")
-	require.NoError(t, err)
-
-	return tt
-}
-
-func time2005(t *testing.T) time.Time {
-	t.Helper()
-
-	tt, err := time.Parse(time.RFC3339, "2005-02-04T20:01:37Z")
-	require.NoError(t, err)
-
-	return tt
 }
 
 func fixedNow(t time.Time) func() time.Time {

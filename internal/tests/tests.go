@@ -12,7 +12,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TempDir(t *testing.T) string {
+func TempDir(t TestingT) string {
 	t.Helper()
 
 	dir, err := ioutil.TempDir("", "logstore")

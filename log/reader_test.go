@@ -39,12 +39,12 @@ func TestReader_Read(t *testing.T) {
 
 	t.Run("should read entries starting from given time", func(t *testing.T) {
 		t.Run("when given time is before than first entry", func(t *testing.T) {
-			firstEntryTime := time2006(t)
+			firstEntryTime := time2006
 
 			l, writer := tests.OpenLogWithWriter(t, log.NowFunc(fixedNow(firstEntryTime)))
 			t1, _ := writer.Write(data1)
 
-			givenTime := time2005(t)
+			givenTime := time2005
 			// when
 			actual := tests.ReadAll(t, l, log.StartingFrom(givenTime))
 			// then
@@ -54,12 +54,12 @@ func TestReader_Read(t *testing.T) {
 		})
 
 		t.Run("when given time is after the last entry", func(t *testing.T) {
-			firstEntryTime := time2005(t)
+			firstEntryTime := time2005
 
 			l, writer := tests.OpenLogWithWriter(t, log.NowFunc(fixedNow(firstEntryTime)))
 			_, _ = writer.Write(data1)
 
-			givenTime := time2006(t)
+			givenTime := time2006
 			// when
 			actual := tests.ReadAll(t, l, log.StartingFrom(givenTime))
 			// then

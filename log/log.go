@@ -58,11 +58,10 @@ func MaxSegmentDuration(duration time.Duration) OpenWriterOption {
 }
 
 type Writer interface {
-	Write(entry []byte, options ...WriteOption) (time.Time, error)
+	Write(entry []byte) (time.Time, error)
+	WriteWithTime(t time.Time, entry []byte) error
 	Close() error
 }
-
-type WriteOption func() error
 
 func (l *Log) OpenReader(options ...OpenReaderOption) (Reader, error) {
 	return l.openReader(options)
