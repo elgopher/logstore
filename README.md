@@ -30,14 +30,14 @@ The library is under heavy development, not ready for production use yet.
 
 # Project Plan
 
-## MVP
+## MVP - minimal number of features, not optimized yet
 
 * [x] API for writing and reading entries from a log
 * [x] Use segments in order to implement efficient compaction
-* [x] Add segment max duration 
+* [x] Add segment limits
 * [x] Implement compaction (manual and goroutine)
 * [x] Reader should allow reading entries starting from given time
-* [ ] Add higher level functions for reading and writing using structures (instead of byte slices)
+* [x] Add higher level functions for reading and writing using structs (instead of byte slices)
 
 ## To be done later
 
@@ -45,5 +45,6 @@ The library is under heavy development, not ready for production use yet.
 * [ ] Verify integrity using checksums
 * [ ] Improve performance of Write by using batch
 * [ ] Improve performance of Read with starting time option by using binary search
+* [ ] Decrease number of allocations in Write, Read and codec
 * [ ] CLI for listing entries and compaction
 * [ ] Metrics

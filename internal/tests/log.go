@@ -12,7 +12,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func OpenLogWriter(t TestingT, options ...log.OpenWriterOption) log.Writer {
+func OpenLogWriter(t TestingT, options ...log.OpenWriterOption) *log.Writer {
 	t.Helper()
 
 	_, writer := OpenLogWithWriter(t, options...)
@@ -20,7 +20,7 @@ func OpenLogWriter(t TestingT, options ...log.OpenWriterOption) log.Writer {
 	return writer
 }
 
-func OpenLogWithWriter(t TestingT, options ...log.OpenWriterOption) (*log.Log, log.Writer) {
+func OpenLogWithWriter(t TestingT, options ...log.OpenWriterOption) (*log.Log, *log.Writer) {
 	t.Helper()
 
 	l := log.New(TempDir(t))
@@ -37,6 +37,18 @@ func OpenLogReader(t *testing.T, options ...log.OpenReaderOption) log.Reader {
 	t.Helper()
 
 	l := log.New(TempDir(t))
+	reader, err := l.OpenReader(options...)
+	require.NoError(t, err)
+	t.Cleanup(func() {
+		_ = reader.Close()
+	})
+
+	return reader
+}
+
+func OpenReader(t TestingT, l *log.Log, options ...log.OpenReaderOption) log.Reader {
+	t.Helper()
+
 	reader, err := l.OpenReader(options...)
 	require.NoError(t, err)
 	t.Cleanup(func() {
@@ -72,7 +84,7 @@ type Entry struct {
 	Data []byte
 }
 
-func WriteEntry(t *testing.T, writer log.Writer, sizeInBytes int64) time.Time {
+func WriteEntry(t *testing.T, writer *log.Writer, sizeInBytes int64) time.Time {
 	t.Helper()
 
 	data := make([]byte, sizeInBytes)

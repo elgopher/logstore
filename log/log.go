@@ -4,6 +4,7 @@
 package log
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"path"
@@ -21,7 +22,7 @@ type Log struct {
 	dir string
 }
 
-func (l *Log) OpenWriter(options ...OpenWriterOption) (Writer, error) {
+func (l *Log) OpenWriter(options ...OpenWriterOption) (*Writer, error) {
 	return l.openWriter(options)
 }
 
@@ -55,12 +56,6 @@ func MaxSegmentDuration(duration time.Duration) OpenWriterOption {
 
 		return nil
 	}
-}
-
-type Writer interface {
-	Write(entry []byte) (time.Time, error)
-	WriteWithTime(t time.Time, entry []byte) error
-	Close() error
 }
 
 func (l *Log) OpenReader(options ...OpenReaderOption) (Reader, error) {
@@ -125,6 +120,42 @@ func (l *Log) RemoveSegmentStartingAt(t time.Time) error {
 	}
 
 	return nil
+}
+
+func (l *Log) LastEntry() (time.Time, []byte, error) {
+	reader, err := l.OpenReader()
+	if err != nil {
+		return time.Time{}, nil, err
+	}
+
+	defer func() {
+		_ = reader.Close()
+	}()
+
+	var (
+		lastTime   time.Time
+		lastData   []byte
+		entryFound bool
+	)
+
+	for {
+		t, data, err := reader.Read()
+		if errors.Is(err, ErrEOL) {
+			if !entryFound {
+				return time.Time{}, nil, fmt.Errorf("log is empty: %w", ErrEOL)
+			}
+
+			return lastTime, lastData, nil
+		}
+
+		if err != nil {
+			return time.Time{}, nil, fmt.Errorf("error reading last entry time from segment file: %w", err)
+		}
+
+		lastTime = t
+		lastData = data
+		entryFound = true
+	}
 }
 
 type Segment struct {

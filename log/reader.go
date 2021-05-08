@@ -147,27 +147,14 @@ func (r *segmentsReader) Close() error {
 }
 
 func (l *Log) readLastTime() (time.Time, error) {
-	reader, err := l.OpenReader()
+	t, _, err := l.LastEntry()
+	if errors.Is(err, ErrEOL) {
+		return time.Time{}, nil
+	}
+
 	if err != nil {
 		return time.Time{}, err
 	}
 
-	defer func() {
-		_ = reader.Close()
-	}()
-
-	var lastTime time.Time
-
-	for {
-		t, _, err := reader.Read()
-		if errors.Is(err, ErrEOL) {
-			return lastTime, nil
-		}
-
-		if err != nil {
-			return time.Time{}, fmt.Errorf("error reading last entry time from segment file: %w", err)
-		}
-
-		lastTime = t
-	}
+	return t, nil
 }
