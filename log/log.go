@@ -22,7 +22,7 @@ type Log struct {
 	dir string
 }
 
-func (l *Log) OpenWriter(options ...OpenWriterOption) (Writer, error) {
+func (l *Log) OpenWriter(options ...OpenWriterOption) (*Writer, error) {
 	return l.openWriter(options)
 }
 
@@ -56,12 +56,6 @@ func MaxSegmentDuration(duration time.Duration) OpenWriterOption {
 
 		return nil
 	}
-}
-
-type Writer interface {
-	Write(entry []byte) (time.Time, error)
-	WriteWithTime(t time.Time, entry []byte) error
-	Close() error
 }
 
 func (l *Log) OpenReader(options ...OpenReaderOption) (Reader, error) {

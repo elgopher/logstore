@@ -12,7 +12,7 @@ import (
 	"github.com/gofrs/flock"
 )
 
-func (l *Log) openWriter(options []OpenWriterOption) (Writer, error) {
+func (l *Log) openWriter(options []OpenWriterOption) (*Writer, error) {
 	settings, err := l.writerSettings(options)
 	if err != nil {
 		return nil, err
@@ -37,7 +37,7 @@ func (l *Log) openWriter(options []OpenWriterOption) (Writer, error) {
 		return nil, err
 	}
 
-	return &writer{
+	return &Writer{
 		currentSegment:      currentSegment,
 		now:                 settings.now,
 		lastTime:            lastTime,
@@ -104,7 +104,7 @@ func tryLock(dir string) (*flock.Flock, error) {
 	return lock, nil
 }
 
-type writer struct {
+type Writer struct {
 	currentSegment      *segmentWriter
 	now                 func() time.Time
 	maxSegmentSizeBytes int64
@@ -114,7 +114,7 @@ type writer struct {
 	dir                 string
 }
 
-func (w *writer) Close() error {
+func (w *Writer) Close() error {
 	if err := w.lock.Unlock(); err != nil {
 		_ = w.currentSegment.close()
 
@@ -128,7 +128,7 @@ func (w *writer) Close() error {
 	return nil
 }
 
-func (w *writer) Write(entry []byte) (time.Time, error) {
+func (w *Writer) Write(entry []byte) (time.Time, error) {
 	t := w.now()
 
 	if !t.After(w.lastTime) {
@@ -138,7 +138,7 @@ func (w *writer) Write(entry []byte) (time.Time, error) {
 	return t, w.WriteWithTime(t, entry)
 }
 
-func (w *writer) WriteWithTime(t time.Time, entry []byte) error {
+func (w *Writer) WriteWithTime(t time.Time, entry []byte) error {
 	if !t.After(w.lastTime) {
 		return fmt.Errorf("forced time is not after last entry time: %w", ErrInvalidParameter)
 	}
@@ -152,7 +152,7 @@ func (w *writer) WriteWithTime(t time.Time, entry []byte) error {
 	return nil
 }
 
-func (w *writer) writeEntry(t time.Time, entry []byte) error {
+func (w *Writer) writeEntry(t time.Time, entry []byte) error {
 	if w.currentSegment == nil {
 		var err error
 
@@ -176,7 +176,7 @@ func (w *writer) writeEntry(t time.Time, entry []byte) error {
 	return nil
 }
 
-func (w *writer) rollOver(start time.Time) error {
+func (w *Writer) rollOver(start time.Time) error {
 	if err := w.currentSegment.close(); err != nil {
 		return fmt.Errorf("error closing segment file: %w", err)
 	}

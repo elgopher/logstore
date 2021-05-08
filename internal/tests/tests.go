@@ -7,6 +7,7 @@ import (
 	"io"
 	"io/ioutil"
 	"os"
+	"reflect"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -27,7 +28,7 @@ func TempDir(t TestingT) string {
 func Close(t *testing.T, c io.Closer) {
 	t.Helper()
 
-	if c == nil {
+	if c == nil || reflect.ValueOf(c).IsNil() {
 		return
 	}
 
