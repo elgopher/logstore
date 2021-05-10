@@ -25,7 +25,7 @@ The library is under heavy development, not ready for production use yet.
 
 # Project Plan
 
-## MVP - minimal number of features, not optimized yet
+## MVP - minimal number of features, not optimized yet, final API proposal
 
 * [x] API for writing and reading entries from a log
 * [x] Use segments in order to implement efficient compaction
