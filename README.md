@@ -1,11 +1,6 @@
 # What is it?
 
-Go library for writing and reading append-only application logs, which can be used as an:
-
-* event store
-* commit log
-* transaction log
-* redo log
+Go library for **writing** and **reading** append-only **application logs**, which can store events (**event store**), transactions (commit, redo, undo log) or any other entries.
 
 # Why it is needed?
 
