@@ -8,9 +8,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/jacekolszak/logstore/compacter"
-	"github.com/jacekolszak/logstore/internal/tests"
-	"github.com/jacekolszak/logstore/log"
+	"github.com/elgopher/logstore/compacter"
+	"github.com/elgopher/logstore/internal/tests"
+	"github.com/elgopher/logstore/log"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )

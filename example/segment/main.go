@@ -3,7 +3,7 @@ package main
 import (
 	"fmt"
 
-	"github.com/jacekolszak/logstore/log"
+	"github.com/elgopher/logstore/log"
 )
 
 // This example reads information about log segments.

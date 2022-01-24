@@ -9,7 +9,7 @@ import (
 	stdlog "log"
 	"time"
 
-	"github.com/jacekolszak/logstore/log"
+	"github.com/elgopher/logstore/log"
 )
 
 func RemoveOldSegments(l Log, olderThan time.Time) (Results, error) {
