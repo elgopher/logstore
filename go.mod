@@ -1,4 +1,4 @@
-module github.com/jacekolszak/logstore
+module github.com/elgopher/logstore
 
 go 1.16
 

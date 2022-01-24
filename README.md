@@ -13,7 +13,7 @@ Logstore is an API for storing and retrieving such entries.
 
 # Install
 
-`go get -u github.com/jacekolszak/logstore`
+`go get -u github.com/elgopher/logstore`
 
 # Quick Start
 

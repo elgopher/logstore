@@ -7,7 +7,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/jacekolszak/logstore/internal/tests"
+	"github.com/elgopher/logstore/internal/tests"
 	"github.com/stretchr/testify/require"
 )
 

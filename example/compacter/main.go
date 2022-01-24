@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/jacekolszak/logstore/compacter"
-	"github.com/jacekolszak/logstore/log"
+	"github.com/elgopher/logstore/compacter"
+	"github.com/elgopher/logstore/log"
 )
 
 // This example shows how to compact log by removing old segments.

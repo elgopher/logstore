@@ -4,7 +4,7 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/jacekolszak/logstore/log"
+	"github.com/elgopher/logstore/log"
 )
 
 // This example reads all entries from log.

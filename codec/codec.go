@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/jacekolszak/logstore/log"
+	"github.com/elgopher/logstore/log"
 )
 
 type Format interface {

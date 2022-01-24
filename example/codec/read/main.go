@@ -4,8 +4,8 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/jacekolszak/logstore/codec"
-	"github.com/jacekolszak/logstore/log"
+	"github.com/elgopher/logstore/codec"
+	"github.com/elgopher/logstore/log"
 )
 
 // This example shows how to write and read events using high level API.
