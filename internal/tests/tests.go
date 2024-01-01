@@ -5,7 +5,6 @@ package tests
 
 import (
 	"io"
-	"io/ioutil"
 	"os"
 	"reflect"
 	"testing"
@@ -16,7 +15,7 @@ import (
 func TempDir(t TestingT) string {
 	t.Helper()
 
-	dir, err := ioutil.TempDir("", "logstore")
+	dir, err := os.MkdirTemp("", "logstore")
 	require.NoError(t, err)
 	t.Cleanup(func() {
 		require.NoError(t, os.RemoveAll(dir))
