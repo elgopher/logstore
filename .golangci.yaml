@@ -12,17 +12,20 @@ issues:
 
 linters:
   enable:
-    - testpackage
-    - exportloopref
-  disable:
-    - paralleltest
-    - gofumpt
-    - exhaustivestruct
-    - scopelint
-  presets:
-    - bugs
-    - complexity
-    - format
-    - performance
-    - style
+    - goimports
+    - unconvert
+    - misspell
+    - gocyclo
+    - deadcode
+    - errcheck
+    - gosimple
+    - govet
+    - ineffassign
+    - staticcheck
+    - structcheck
+    - typecheck
     - unused
+    - varcheck
+    - gocritic
+    - gochecknoinits
+
